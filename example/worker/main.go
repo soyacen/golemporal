@@ -10,7 +10,6 @@ import (
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 	"go.temporal.io/sdk/workflow"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -57,7 +56,7 @@ func (s *GreeterWorkflowServer) Hello(ctx workflow.Context, input *api.HelloRequ
 	ctx = workflow.WithActivityOptions(ctx, ao)
 	helloResult, err := s.addActivity.Add(ctx, &api.AddRequest{Count: input.GetCount()})
 	if err != nil {
-		logger.Error("activity failed", zap.Error(err))
+		logger.Error("activity failed", "error", err)
 		return nil, err
 	}
 	logger.Info("HelloWorkflow completed")
@@ -76,7 +75,7 @@ func (s *GreeterWorkflowServer) Goodbye(ctx workflow.Context, input *api.Goodbye
 	ctx = workflow.WithActivityOptions(ctx, ao)
 	helloResult, err := s.multiActivity.Multi(ctx, &api.MultiRequest{Count: input.GetCount()})
 	if err != nil {
-		logger.Error("activity failed", zap.Error(err))
+		logger.Error("activity failed", "error", err)
 		return nil, err
 	}
 	logger.Info("GoodbyeWorkflow completed")
