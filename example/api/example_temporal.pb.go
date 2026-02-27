@@ -102,26 +102,26 @@ type GreeterWorkflowServer interface {
 
 func RegisterGreeterWorkflowWorker(
 	w worker.Worker,
-	wf GreeterWorkflowServer,
-	addActivity AddActivityServer,
-	multiActivity MultiActivityServer,
+	greeterWorkflowServer GreeterWorkflowServer,
+	addActivityServer AddActivityServer,
+	multiActivityServer MultiActivityServer,
 ) {
-	w.RegisterActivityWithOptions(addActivity.Add, activity.RegisterOptions{
+	w.RegisterActivityWithOptions(addActivityServer.Add, activity.RegisterOptions{
 		Name:                          "/golemporal.example.api.AddActivity/Add",
 		DisableAlreadyRegisteredCheck: true,
 	})
 
-	w.RegisterActivityWithOptions(multiActivity.Multi, activity.RegisterOptions{
+	w.RegisterActivityWithOptions(multiActivityServer.Multi, activity.RegisterOptions{
 		Name:                          "/golemporal.example.api.MultiActivity/Multi",
 		DisableAlreadyRegisteredCheck: true,
 	})
 
-	w.RegisterWorkflowWithOptions(wf.Hello, workflow.RegisterOptions{
+	w.RegisterWorkflowWithOptions(greeterWorkflowServer.Hello, workflow.RegisterOptions{
 		Name:                          "/golemporal.example.api.GreeterWorkflow/Hello",
 		DisableAlreadyRegisteredCheck: true,
 	})
 
-	w.RegisterWorkflowWithOptions(wf.Goodbye, workflow.RegisterOptions{
+	w.RegisterWorkflowWithOptions(greeterWorkflowServer.Goodbye, workflow.RegisterOptions{
 		Name:                          "/golemporal.example.api.GreeterWorkflow/Goodbye",
 		DisableAlreadyRegisteredCheck: true,
 	})

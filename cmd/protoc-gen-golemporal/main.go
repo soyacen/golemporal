@@ -223,16 +223,17 @@ func generateWorkflowServer(g *protogen.GeneratedFile, svc *protogen.Service) {
 }
 
 func generateRegisterFunction(g *protogen.GeneratedFile, workflow *protogen.Service, activities []*protogen.Service) {
+	workflowName := string(workflow.Desc.Name()) + "Server"
 	g.P("func Register", string(workflow.Desc.Name()), "Worker(")
 	g.P("w ", workerContextIdent, ",")
-	g.P("wf ", string(workflow.Desc.Name()), "Server,")
+	g.P(toLowerCase(workflowName), " ", workflowName, ",")
 	for _, activity := range activities {
-		activityName := string(activity.Desc.Name())
-		g.P(toLowerCase(activityName), " ", activityName, "Server,")
+		activityName := string(activity.Desc.Name()) + "Server"
+		g.P(toLowerCase(activityName), " ", activityName, ",")
 	}
 	g.P(") {")
 	for _, activity := range activities {
-		activityName := string(activity.Desc.Name())
+		activityName := string(activity.Desc.Name()) + "Server"
 		for _, method := range activity.Methods {
 			g.P("w.RegisterActivityWithOptions(", toLowerCase(activityName), ".", method.Desc.Name(), ", ", activityRegisterOptionsIdent, "{")
 			g.P("Name: ", strconv.Quote(methodFullName(method)), ",")
@@ -242,7 +243,7 @@ func generateRegisterFunction(g *protogen.GeneratedFile, workflow *protogen.Serv
 		}
 	}
 	for _, method := range workflow.Methods {
-		g.P("w.RegisterWorkflowWithOptions(wf.", method.Desc.Name(), ", workflow.RegisterOptions{")
+		g.P("w.RegisterWorkflowWithOptions(", toLowerCase(workflowName), ".", method.Desc.Name(), ", workflow.RegisterOptions{")
 		g.P("Name: ", strconv.Quote(methodFullName(method)), ",")
 		g.P("DisableAlreadyRegisteredCheck: true,")
 		g.P("})")
