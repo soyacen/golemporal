@@ -4,6 +4,7 @@ package api
 
 import (
 	context "context"
+
 	starter "github.com/soyacen/golemporal/starter"
 	activity "go.temporal.io/sdk/activity"
 	client "go.temporal.io/sdk/client"
@@ -40,14 +41,6 @@ type GreeterWorkflowServer interface {
 	Hello(workflow.Context, *HelloRequest) (*HelloResponse, error)
 }
 
-func RegisterGreeterWorkflowServerWorker(w worker.Worker, srv GreeterWorkflowServer) {
-	w.RegisterWorkflowWithOptions(srv.Hello, workflow.RegisterOptions{
-		Name:                          "/golemporal.example.api.GreeterWorkflow/Hello",
-		DisableAlreadyRegisteredCheck: true,
-	})
-
-}
-
 type GreeterActivityClient interface {
 	SayHello(ctx workflow.Context, in *HelloRequest) (*HelloResponse, error)
 }
@@ -69,6 +62,13 @@ func (c *greeterActivityClient) SayHello(ctx workflow.Context, in *HelloRequest)
 
 type GreeterActivityServer interface {
 	SayHello(context.Context, *HelloRequest) (*HelloResponse, error)
+}
+
+func RegisterGreeterWorkflowServerWorker(w worker.Worker, srv GreeterWorkflowServer) {
+	w.RegisterWorkflowWithOptions(srv.Hello, workflow.RegisterOptions{
+		Name:                          "/golemporal.example.api.GreeterWorkflow/Hello",
+		DisableAlreadyRegisteredCheck: true,
+	})
 }
 
 func RegisterGreeterActivityServer(w worker.Worker, srv GreeterActivityServer) {

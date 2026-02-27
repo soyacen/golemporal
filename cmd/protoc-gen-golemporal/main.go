@@ -86,18 +86,84 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) {
 	g.P()
 	g.P("package ", file.GoPackageName)
 	g.P()
+
+	for _, svc := range file.Services {
+		serviceName := string(svc.Desc.Name())
+		if strings.HasSuffix(serviceName, "Activity") {
+			generateActivityClient(g, svc)
+			g.P()
+			generateActivityServer(g, svc)
+		}
+	}
 	for _, svc := range file.Services {
 		serviceName := string(svc.Desc.Name())
 		if strings.HasSuffix(serviceName, "Workflow") {
 			generateWorkflowClient(g, svc)
 			g.P()
 			generateWorkflowServer(g, svc)
-		} else if strings.HasSuffix(serviceName, "Activity") {
-			generateActivityClient(g, svc)
-			g.P()
-			generateActivityServer(g, svc)
 		}
 	}
+}
+
+func generateActivityClient(g *protogen.GeneratedFile, svc *protogen.Service) {
+	clientName := string(svc.Desc.Name()) + "Client"
+	g.P("type ", clientName, " interface {")
+	for _, method := range svc.Methods {
+		inputType := method.Input.GoIdent.GoName
+		outputType := method.Output.GoIdent.GoName
+		g.P("", method.Desc.Name(), "(ctx ", workflowContextIdent, ", in *", inputType, ") (*", outputType, ", error)")
+	}
+	g.P("}")
+	g.P()
+
+	// Generate constructor
+	g.P("func New", clientName, "() ", clientName, " {")
+	g.P("return &", toLowerCase(clientName), "{}")
+	g.P("}")
+	g.P()
+
+	// Generate private struct
+	g.P("type ", toLowerCase(clientName), " struct {}")
+	g.P()
+
+	// Generate methods
+	for _, method := range svc.Methods {
+		inputType := method.Input.GoIdent.GoName
+		outputType := method.Output.GoIdent.GoName
+		methodName := string(method.Desc.Name())
+		g.P("func (c *", toLowerCase(clientName), ") ", methodName, "(ctx ", workflowContextIdent, ", in *", inputType, ") (*", outputType, ", error) {")
+		g.P("var out ", outputType)
+		g.P("err := workflow.ExecuteActivity(ctx, ", strconv.Quote(methodFullName(method)), ", in).Get(ctx, &out)")
+		g.P("if err != nil {")
+		g.P("return nil, err")
+		g.P("}")
+		g.P("return &out, nil")
+		g.P("}")
+		g.P()
+	}
+}
+
+func generateActivityServer(g *protogen.GeneratedFile, svc *protogen.Service) {
+	serverName := string(svc.Desc.Name()) + "Server"
+	// Generate interface
+	g.P("type ", serverName, " interface {")
+	for _, method := range svc.Methods {
+		inputType := method.Input.GoIdent.GoName
+		outputType := method.Output.GoIdent.GoName
+		g.P("", method.Desc.Name(), "(", contextIdent, ", *", inputType, ") (*", outputType, ", error)")
+	}
+	g.P("}")
+	g.P()
+
+	// Generate register function
+	g.P("func Register", serverName, "(w ", workerContextIdent, ", srv ", serverName, ") {")
+	for _, method := range svc.Methods {
+		g.P("w.RegisterActivityWithOptions(srv.", method.Desc.Name(), ", ", activityRegisterOptionsIdent, "{")
+		g.P("Name: ", strconv.Quote(methodFullName(method)), ",")
+		g.P("DisableAlreadyRegisteredCheck: true,")
+		g.P("})")
+	}
+	g.P("}")
 }
 
 func generateWorkflowClient(g *protogen.GeneratedFile, svc *protogen.Service) {
@@ -163,67 +229,6 @@ func generateWorkflowServer(g *protogen.GeneratedFile, svc *protogen.Service) {
 		g.P("DisableAlreadyRegisteredCheck: true,")
 		g.P("})")
 		g.P()
-	}
-	g.P("}")
-}
-
-func generateActivityClient(g *protogen.GeneratedFile, svc *protogen.Service) {
-	clientName := string(svc.Desc.Name()) + "Client"
-	g.P("type ", clientName, " interface {")
-	for _, method := range svc.Methods {
-		inputType := method.Input.GoIdent.GoName
-		outputType := method.Output.GoIdent.GoName
-		g.P("", method.Desc.Name(), "(ctx ", workflowContextIdent, ", in *", inputType, ") (*", outputType, ", error)")
-	}
-	g.P("}")
-	g.P()
-
-	// Generate constructor
-	g.P("func New", clientName, "() ", clientName, " {")
-	g.P("return &", toLowerCase(clientName), "{}")
-	g.P("}")
-	g.P()
-
-	// Generate private struct
-	g.P("type ", toLowerCase(clientName), " struct {}")
-	g.P()
-
-	// Generate methods
-	for _, method := range svc.Methods {
-		inputType := method.Input.GoIdent.GoName
-		outputType := method.Output.GoIdent.GoName
-		methodName := string(method.Desc.Name())
-		g.P("func (c *", toLowerCase(clientName), ") ", methodName, "(ctx ", workflowContextIdent, ", in *", inputType, ") (*", outputType, ", error) {")
-		g.P("var out ", outputType)
-		g.P("err := workflow.ExecuteActivity(ctx, ", strconv.Quote(methodFullName(method)), ", in).Get(ctx, &out)")
-		g.P("if err != nil {")
-		g.P("return nil, err")
-		g.P("}")
-		g.P("return &out, nil")
-		g.P("}")
-		g.P()
-	}
-}
-
-func generateActivityServer(g *protogen.GeneratedFile, svc *protogen.Service) {
-	serverName := string(svc.Desc.Name()) + "Server"
-	// Generate interface
-	g.P("type ", serverName, " interface {")
-	for _, method := range svc.Methods {
-		inputType := method.Input.GoIdent.GoName
-		outputType := method.Output.GoIdent.GoName
-		g.P("", method.Desc.Name(), "(", contextIdent, ", *", inputType, ") (*", outputType, ", error)")
-	}
-	g.P("}")
-	g.P()
-
-	// Generate register function
-	g.P("func Register", serverName, "(w ", workerContextIdent, ", srv ", serverName, ") {")
-	for _, method := range svc.Methods {
-		g.P("w.RegisterActivityWithOptions(srv.", method.Desc.Name(), ", ", activityRegisterOptionsIdent, "{")
-		g.P("Name: ", strconv.Quote(methodFullName(method)), ",")
-		g.P("DisableAlreadyRegisteredCheck: true,")
-		g.P("})")
 	}
 	g.P("}")
 }
