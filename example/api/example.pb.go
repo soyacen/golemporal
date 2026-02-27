@@ -125,6 +125,286 @@ func (x *HelloResponse) GetResult() int32 {
 	return 0
 }
 
+type GoodbyeRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Count         int32                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GoodbyeRequest) Reset() {
+	*x = GoodbyeRequest{}
+	mi := &file_api_example_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GoodbyeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GoodbyeRequest) ProtoMessage() {}
+
+func (x *GoodbyeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_example_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GoodbyeRequest.ProtoReflect.Descriptor instead.
+func (*GoodbyeRequest) Descriptor() ([]byte, []int) {
+	return file_api_example_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GoodbyeRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *GoodbyeRequest) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type GoodbyeResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	Result        int32                  `protobuf:"varint,2,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GoodbyeResponse) Reset() {
+	*x = GoodbyeResponse{}
+	mi := &file_api_example_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GoodbyeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GoodbyeResponse) ProtoMessage() {}
+
+func (x *GoodbyeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_example_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GoodbyeResponse.ProtoReflect.Descriptor instead.
+func (*GoodbyeResponse) Descriptor() ([]byte, []int) {
+	return file_api_example_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GoodbyeResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *GoodbyeResponse) GetResult() int32 {
+	if x != nil {
+		return x.Result
+	}
+	return 0
+}
+
+type AddRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Count         int32                  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddRequest) Reset() {
+	*x = AddRequest{}
+	mi := &file_api_example_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddRequest) ProtoMessage() {}
+
+func (x *AddRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_example_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddRequest.ProtoReflect.Descriptor instead.
+func (*AddRequest) Descriptor() ([]byte, []int) {
+	return file_api_example_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *AddRequest) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type AddResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        int32                  `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddResponse) Reset() {
+	*x = AddResponse{}
+	mi := &file_api_example_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddResponse) ProtoMessage() {}
+
+func (x *AddResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_example_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddResponse.ProtoReflect.Descriptor instead.
+func (*AddResponse) Descriptor() ([]byte, []int) {
+	return file_api_example_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *AddResponse) GetResult() int32 {
+	if x != nil {
+		return x.Result
+	}
+	return 0
+}
+
+type MultiRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Count         int32                  `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MultiRequest) Reset() {
+	*x = MultiRequest{}
+	mi := &file_api_example_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MultiRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MultiRequest) ProtoMessage() {}
+
+func (x *MultiRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_example_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MultiRequest.ProtoReflect.Descriptor instead.
+func (*MultiRequest) Descriptor() ([]byte, []int) {
+	return file_api_example_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *MultiRequest) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+type MultiResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        int32                  `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *MultiResponse) Reset() {
+	*x = MultiResponse{}
+	mi := &file_api_example_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MultiResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MultiResponse) ProtoMessage() {}
+
+func (x *MultiResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_example_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MultiResponse.ProtoReflect.Descriptor instead.
+func (*MultiResponse) Descriptor() ([]byte, []int) {
+	return file_api_example_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *MultiResponse) GetResult() int32 {
+	if x != nil {
+		return x.Result
+	}
+	return 0
+}
+
 var File_api_example_proto protoreflect.FileDescriptor
 
 const file_api_example_proto_rawDesc = "" +
@@ -135,11 +415,29 @@ const file_api_example_proto_rawDesc = "" +
 	"\x05count\x18\x02 \x01(\x05R\x05count\"A\n" +
 	"\rHelloResponse\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12\x16\n" +
-	"\x06result\x18\x02 \x01(\x05R\x06result2g\n" +
+	"\x06result\x18\x02 \x01(\x05R\x06result\":\n" +
+	"\x0eGoodbyeRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"C\n" +
+	"\x0fGoodbyeResponse\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\x12\x16\n" +
+	"\x06result\x18\x02 \x01(\x05R\x06result\"\"\n" +
+	"\n" +
+	"AddRequest\x12\x14\n" +
+	"\x05count\x18\x01 \x01(\x05R\x05count\"%\n" +
+	"\vAddResponse\x12\x16\n" +
+	"\x06result\x18\x01 \x01(\x05R\x06result\"$\n" +
+	"\fMultiRequest\x12\x14\n" +
+	"\x05count\x18\x01 \x01(\x05R\x05count\"'\n" +
+	"\rMultiResponse\x12\x16\n" +
+	"\x06result\x18\x01 \x01(\x05R\x06result2\xc3\x01\n" +
 	"\x0fGreeterWorkflow\x12T\n" +
-	"\x05Hello\x12$.golemporal.example.api.HelloRequest\x1a%.golemporal.example.api.HelloResponse2j\n" +
-	"\x0fGreeterActivity\x12W\n" +
-	"\bSayHello\x12$.golemporal.example.api.HelloRequest\x1a%.golemporal.example.api.HelloResponseB/Z-github.com/soyacen/golemporal/example/api;apib\x06proto3"
+	"\x05Hello\x12$.golemporal.example.api.HelloRequest\x1a%.golemporal.example.api.HelloResponse\x12Z\n" +
+	"\aGoodbye\x12&.golemporal.example.api.GoodbyeRequest\x1a'.golemporal.example.api.GoodbyeResponse2]\n" +
+	"\vAddActivity\x12N\n" +
+	"\x03Add\x12\".golemporal.example.api.AddRequest\x1a#.golemporal.example.api.AddResponse2e\n" +
+	"\rMultiActivity\x12T\n" +
+	"\x05Multi\x12$.golemporal.example.api.MultiRequest\x1a%.golemporal.example.api.MultiResponseB/Z-github.com/soyacen/golemporal/example/api;apib\x06proto3"
 
 var (
 	file_api_example_proto_rawDescOnce sync.Once
@@ -153,18 +451,28 @@ func file_api_example_proto_rawDescGZIP() []byte {
 	return file_api_example_proto_rawDescData
 }
 
-var file_api_example_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_api_example_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_api_example_proto_goTypes = []any{
-	(*HelloRequest)(nil),  // 0: golemporal.example.api.HelloRequest
-	(*HelloResponse)(nil), // 1: golemporal.example.api.HelloResponse
+	(*HelloRequest)(nil),    // 0: golemporal.example.api.HelloRequest
+	(*HelloResponse)(nil),   // 1: golemporal.example.api.HelloResponse
+	(*GoodbyeRequest)(nil),  // 2: golemporal.example.api.GoodbyeRequest
+	(*GoodbyeResponse)(nil), // 3: golemporal.example.api.GoodbyeResponse
+	(*AddRequest)(nil),      // 4: golemporal.example.api.AddRequest
+	(*AddResponse)(nil),     // 5: golemporal.example.api.AddResponse
+	(*MultiRequest)(nil),    // 6: golemporal.example.api.MultiRequest
+	(*MultiResponse)(nil),   // 7: golemporal.example.api.MultiResponse
 }
 var file_api_example_proto_depIdxs = []int32{
 	0, // 0: golemporal.example.api.GreeterWorkflow.Hello:input_type -> golemporal.example.api.HelloRequest
-	0, // 1: golemporal.example.api.GreeterActivity.SayHello:input_type -> golemporal.example.api.HelloRequest
-	1, // 2: golemporal.example.api.GreeterWorkflow.Hello:output_type -> golemporal.example.api.HelloResponse
-	1, // 3: golemporal.example.api.GreeterActivity.SayHello:output_type -> golemporal.example.api.HelloResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	2, // 1: golemporal.example.api.GreeterWorkflow.Goodbye:input_type -> golemporal.example.api.GoodbyeRequest
+	4, // 2: golemporal.example.api.AddActivity.Add:input_type -> golemporal.example.api.AddRequest
+	6, // 3: golemporal.example.api.MultiActivity.Multi:input_type -> golemporal.example.api.MultiRequest
+	1, // 4: golemporal.example.api.GreeterWorkflow.Hello:output_type -> golemporal.example.api.HelloResponse
+	3, // 5: golemporal.example.api.GreeterWorkflow.Goodbye:output_type -> golemporal.example.api.GoodbyeResponse
+	5, // 6: golemporal.example.api.AddActivity.Add:output_type -> golemporal.example.api.AddResponse
+	7, // 7: golemporal.example.api.MultiActivity.Multi:output_type -> golemporal.example.api.MultiResponse
+	4, // [4:8] is the sub-list for method output_type
+	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -181,9 +489,9 @@ func file_api_example_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_example_proto_rawDesc), len(file_api_example_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   8,
 			NumExtensions: 0,
-			NumServices:   2,
+			NumServices:   3,
 		},
 		GoTypes:           file_api_example_proto_goTypes,
 		DependencyIndexes: file_api_example_proto_depIdxs,

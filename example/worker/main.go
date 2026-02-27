@@ -27,14 +27,14 @@ func main() {
 	taskQueue := "golemporal-example"
 	w := worker.New(c, taskQueue, worker.Options{})
 
-	ws := GreeterWorkflowServer{
-		activity: api.NewGreeterActivityClient(),
-	}
-	api.RegisterGreeterWorkflowServerWorker(w, &ws)
-
-	as := GreeterActivityServer{}
-	api.RegisterGreeterActivityServer(w, &as)
-
+	api.RegisterGreeterWorkflowWorker(w,
+		&GreeterWorkflowServer{
+			addActivity:   api.NewAddActivityClient(),
+			multiActivity: api.NewMultiActivityClient(),
+		},
+		&AddActivityServer{},
+		&MultiActivityServer{},
+	)
 	if err := w.Start(); err != nil {
 		log.Fatalln("Unable to start worker", err)
 	}
@@ -44,31 +44,57 @@ func main() {
 }
 
 type GreeterWorkflowServer struct {
-	activity api.GreeterActivityClient
+	addActivity   api.AddActivityClient
+	multiActivity api.MultiActivityClient
 }
 
 func (s *GreeterWorkflowServer) Hello(ctx workflow.Context, input *api.HelloRequest) (*api.HelloResponse, error) {
 	logger := workflow.GetLogger(ctx)
-	logger.Info("starting HelloWorkflow", zap.String("name", input.Name))
+	logger.Info("HelloWorkflow starting")
 	ao := workflow.ActivityOptions{
 		StartToCloseTimeout: 10 * time.Second,
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
-	helloResult, err := s.activity.SayHello(ctx, input)
+	helloResult, err := s.addActivity.Add(ctx, &api.AddRequest{Count: input.GetCount()})
 	if err != nil {
 		logger.Error("activity failed", zap.Error(err))
 		return nil, err
 	}
-	logger.Info("workflow completed", zap.String("message", helloResult.Message))
-	return helloResult, nil
+	logger.Info("HelloWorkflow completed")
+	return &api.HelloResponse{
+		Message: fmt.Sprintf("Hello, %s! (result: %d)", input.Name, helloResult.Result),
+		Result:  helloResult.Result,
+	}, nil
+}
+
+func (s *GreeterWorkflowServer) Goodbye(ctx workflow.Context, input *api.GoodbyeRequest) (*api.GoodbyeResponse, error) {
+	logger := workflow.GetLogger(ctx)
+	logger.Info("GoodbyeWorkflow starting")
+	ao := workflow.ActivityOptions{
+		StartToCloseTimeout: 10 * time.Second,
+	}
+	ctx = workflow.WithActivityOptions(ctx, ao)
+	helloResult, err := s.multiActivity.Multi(ctx, &api.MultiRequest{Count: input.GetCount()})
+	if err != nil {
+		logger.Error("activity failed", zap.Error(err))
+		return nil, err
+	}
+	logger.Info("GoodbyeWorkflow completed")
+	return &api.GoodbyeResponse{
+		Message: fmt.Sprintf("Goodbye, %s! (result: %d)", input.Name, helloResult.Result),
+		Result:  helloResult.Result,
+	}, nil
 }
 
 // Activity implementations
-type GreeterActivityServer struct{}
+type AddActivityServer struct{}
 
-func (s *GreeterActivityServer) SayHello(ctx context.Context, input *api.HelloRequest) (*api.HelloResponse, error) {
-	return &api.HelloResponse{
-		Message: fmt.Sprintf("Hello, %s! (count: %d)", input.Name, input.Count),
-		Result:  input.Count * 2,
-	}, nil
+func (s *AddActivityServer) Add(ctx context.Context, input *api.AddRequest) (*api.AddResponse, error) {
+	return &api.AddResponse{Result: input.Count + input.Count}, nil
+}
+
+type MultiActivityServer struct{}
+
+func (s *MultiActivityServer) Multi(ctx context.Context, input *api.MultiRequest) (*api.MultiResponse, error) {
+	return &api.MultiResponse{Result: input.Count * input.Count}, nil
 }

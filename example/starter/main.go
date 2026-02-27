@@ -25,15 +25,21 @@ func main() {
 	taskQueue := "golemporal-example"
 
 	gc := api.NewGreeterWorkflowClient(c, taskQueue)
-	helloResult, err := gc.Hello(ctx, &api.HelloRequest{
-		Name:  "World",
-		Count: 5,
-	})
+	helloResult, err := gc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5})
 	if err != nil {
 		logger.Fatal("failed to execute workflow", zap.Error(err))
 	}
 
-	logger.Info("workflow completed",
+	logger.Info("hello workflow completed",
 		zap.String("message", helloResult.Message),
 		zap.Int32("result", helloResult.Result))
+
+	goodbyeResult, err := gc.Goodbye(ctx, &api.GoodbyeRequest{Name: "World", Count: 10})
+	if err != nil {
+		logger.Fatal("failed to execute workflow", zap.Error(err))
+	}
+
+	logger.Info("goodbye workflow completed",
+		zap.String("message", goodbyeResult.Message),
+		zap.Int32("result", goodbyeResult.Result))
 }

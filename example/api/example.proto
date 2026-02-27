@@ -14,11 +14,42 @@ message HelloResponse {
   int32 result = 2;
 }
 
-service GreeterWorkflow {
-  rpc Hello(HelloRequest) returns (HelloResponse);
+message GoodbyeRequest {
+  string name = 1;
+  int32 count = 2;
 }
 
-// Activity service definition
-service GreeterActivity {
-  rpc SayHello(HelloRequest) returns (HelloResponse);
+message GoodbyeResponse {
+  string message = 1;
+  int32 result = 2;
+}
+
+service GreeterWorkflow {
+  rpc Hello(HelloRequest) returns (HelloResponse);
+  rpc Goodbye(GoodbyeRequest) returns (GoodbyeResponse);
+}
+
+message AddRequest {
+  int32 count = 1;
+}
+
+message AddResponse {
+  int32 result = 1;
+}
+
+service AddActivity {
+  rpc Add(AddRequest) returns (AddResponse);
+}
+
+
+message MultiRequest {
+  int32 count = 1;
+}
+
+message MultiResponse {
+  int32 result = 1;
+}
+
+service MultiActivity {
+  rpc Multi(MultiRequest) returns (MultiResponse);
 }
