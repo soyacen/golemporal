@@ -1,6 +1,6 @@
 module github.com/soyacen/golemporal
 
-go 1.24.0
+go 1.25.0
 
 require (
 	go.temporal.io/sdk v1.40.0

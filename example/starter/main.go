@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/soyacen/golemporal/example"
+	"github.com/soyacen/golemporal/example/api"
 	"go.temporal.io/sdk/client"
 	"go.uber.org/zap"
 )
@@ -24,8 +24,8 @@ func main() {
 
 	taskQueue := "golemporal-example"
 
-	gc := example.NewGreeterWorkflowClient(c, taskQueue)
-	helloResult, err := gc.HelloWorkflow(ctx, &example.HelloRequest{
+	gc := api.NewGreeterWorkflowClient(c, taskQueue)
+	helloResult, err := gc.Hello(ctx, &api.HelloRequest{
 		Name:  "World",
 		Count: 5,
 	})

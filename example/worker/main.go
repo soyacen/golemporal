@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/soyacen/golemporal/example"
+	"github.com/soyacen/golemporal/example/api"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 	"go.temporal.io/sdk/workflow"
@@ -28,12 +28,12 @@ func main() {
 	w := worker.New(c, taskQueue, worker.Options{})
 
 	ws := GreeterWorkflowServer{
-		activity: example.NewGreeterActivityClient(),
+		activity: api.NewGreeterActivityClient(),
 	}
-	example.RegisterGreeterWorker(w, &ws)
+	api.RegisterGreeterWorkflowServerWorker(w, &ws)
 
 	as := GreeterActivityServer{}
-	example.RegisterGreeterActivity(w, &as)
+	api.RegisterGreeterActivityServer(w, &as)
 
 	if err := w.Start(); err != nil {
 		log.Fatalln("Unable to start worker", err)
@@ -44,10 +44,10 @@ func main() {
 }
 
 type GreeterWorkflowServer struct {
-	activity example.GreeterActivityClient
+	activity api.GreeterActivityClient
 }
 
-func (s *GreeterWorkflowServer) HelloWorkflow(ctx workflow.Context, input *example.HelloRequest) (*example.HelloResponse, error) {
+func (s *GreeterWorkflowServer) Hello(ctx workflow.Context, input *api.HelloRequest) (*api.HelloResponse, error) {
 	logger := workflow.GetLogger(ctx)
 	logger.Info("starting HelloWorkflow", zap.String("name", input.Name))
 	ao := workflow.ActivityOptions{
@@ -66,8 +66,8 @@ func (s *GreeterWorkflowServer) HelloWorkflow(ctx workflow.Context, input *examp
 // Activity implementations
 type GreeterActivityServer struct{}
 
-func (s *GreeterActivityServer) SayHello(ctx context.Context, input *example.HelloRequest) (*example.HelloResponse, error) {
-	return &example.HelloResponse{
+func (s *GreeterActivityServer) SayHello(ctx context.Context, input *api.HelloRequest) (*api.HelloResponse, error) {
+	return &api.HelloResponse{
 		Message: fmt.Sprintf("Hello, %s! (count: %d)", input.Name, input.Count),
 		Result:  input.Count * 2,
 	}, nil
