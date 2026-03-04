@@ -58,8 +58,8 @@ type MultiActivityServer interface {
 }
 
 type GreeterWorkflowClient interface {
-	Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) (*HelloResponse, error)
-	Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) (*GoodbyeResponse, error)
+	Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) error
+	Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) error
 }
 
 type greeterWorkflowClient struct {
@@ -71,28 +71,48 @@ func NewGreeterWorkflowClient(c client.Client, taskQueue string) GreeterWorkflow
 	return &greeterWorkflowClient{c: c, taskQueue: taskQueue}
 }
 
-func (c *greeterWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) (*HelloResponse, error) {
-	run, err := c.c.ExecuteWorkflow(ctx, starter.NewOptions(c.taskQueue, opts...), "/golemporal.example.api.GreeterWorkflow/Hello", in)
+func (c *greeterWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) error {
+	options := starter.NewOptions(c.taskQueue, opts...)
+	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, "/golemporal.example.api.GreeterWorkflow/Hello", in)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	out := new(HelloResponse)
-	if err := run.Get(ctx, out); err != nil {
-		return nil, err
+	if options.WorkflowID != nil {
+		workflowID := run.GetID()
+		*options.WorkflowID = workflowID
 	}
-	return out, nil
+	if options.RunID != nil {
+		runID := run.GetRunID()
+		*options.RunID = runID
+	}
+	if options.Result != nil {
+		if err := run.Get(ctx, options.Result); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func (c *greeterWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) (*GoodbyeResponse, error) {
-	run, err := c.c.ExecuteWorkflow(ctx, starter.NewOptions(c.taskQueue, opts...), "/golemporal.example.api.GreeterWorkflow/Goodbye", in)
+func (c *greeterWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) error {
+	options := starter.NewOptions(c.taskQueue, opts...)
+	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, "/golemporal.example.api.GreeterWorkflow/Goodbye", in)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	out := new(GoodbyeResponse)
-	if err := run.Get(ctx, out); err != nil {
-		return nil, err
+	if options.WorkflowID != nil {
+		workflowID := run.GetID()
+		*options.WorkflowID = workflowID
 	}
-	return out, nil
+	if options.RunID != nil {
+		runID := run.GetRunID()
+		*options.RunID = runID
+	}
+	if options.Result != nil {
+		if err := run.Get(ctx, options.Result); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 type GreeterWorkflowServer interface {

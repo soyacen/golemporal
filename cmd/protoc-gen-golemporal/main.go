@@ -170,8 +170,8 @@ func generateWorkflowClient(g *protogen.GeneratedFile, svc *protogen.Service) {
 	g.P("type ", clientName, " interface {")
 	for _, method := range svc.Methods {
 		inputType := method.Input.GoIdent.GoName
-		outputType := method.Output.GoIdent.GoName
-		g.P("", method.Desc.Name(), "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") (*", outputType, ", error)")
+		// outputType := method.Output.GoIdent.GoName
+		g.P("", method.Desc.Name(), "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") error")
 	}
 	g.P("}")
 	g.P()
@@ -192,19 +192,29 @@ func generateWorkflowClient(g *protogen.GeneratedFile, svc *protogen.Service) {
 	// Generate methods
 	for _, method := range svc.Methods {
 		inputType := method.Input.GoIdent.GoName
-		outputType := method.Output.GoIdent.GoName
+		// outputType := method.Output.GoIdent.GoName
 		methodName := string(method.Desc.Name())
 
-		g.P("func (c *", toLowerCase(clientName), ") ", methodName, "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") (*", outputType, ", error) {")
-		g.P("run, err := c.c.ExecuteWorkflow(ctx, ", starterNewOptionsIdent, "(c.taskQueue, opts...), ", strconv.Quote(methodFullName(method)), ", in)")
+		g.P("func (c *", toLowerCase(clientName), ") ", methodName, "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") error {")
+		g.P("options := ", starterNewOptionsIdent, "(c.taskQueue, opts...)")
+		g.P("run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, ", strconv.Quote(methodFullName(method)), ", in)")
 		g.P("if err != nil {")
-		g.P("return nil, err")
+		g.P("return err")
 		g.P("}")
-		g.P("out := new(", outputType, ")")
-		g.P("if err := run.Get(ctx, out); err != nil {")
-		g.P("return nil, err")
+		g.P("if options.WorkflowID != nil {")
+		g.P("workflowID := run.GetID()")
+		g.P("*options.WorkflowID = workflowID")
 		g.P("}")
-		g.P("return out, nil")
+		g.P("if options.RunID != nil {")
+		g.P("runID := run.GetRunID()")
+		g.P("*options.RunID = runID")
+		g.P("}")
+		g.P("if options.Result != nil {")
+		g.P("if err := run.Get(ctx, options.Result); err != nil {")
+		g.P("return err")
+		g.P("}")
+		g.P("}")
+		g.P("return nil")
 		g.P("}")
 		g.P()
 	}
