@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/soyacen/golemporal/example/api"
+	"github.com/soyacen/golemporal/starter"
 	"go.temporal.io/sdk/client"
 )
 
@@ -21,15 +22,15 @@ func main() {
 	taskQueue := "golemporal-example"
 
 	gc := api.NewGreeterWorkflowClient(c, taskQueue)
-	helloResult, err := gc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5})
-	if err != nil {
+	var helloResult api.HelloResponse
+	if err := gc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5}, starter.GetResult(&helloResult)); err != nil {
 		log.Fatal(err)
 	}
 
 	log.Printf("hello workflow completed message: %s, result: %d", helloResult.Message, helloResult.Result)
 
-	goodbyeResult, err := gc.Goodbye(ctx, &api.GoodbyeRequest{Name: "World", Count: 10})
-	if err != nil {
+	var goodbyeResult api.GoodbyeResponse
+	if err := gc.Goodbye(ctx, &api.GoodbyeRequest{Name: "World", Count: 10}, starter.GetResult(&goodbyeResult)); err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("goodbye workflow completed message: %s, result: %d", goodbyeResult.Message, goodbyeResult.Result)
