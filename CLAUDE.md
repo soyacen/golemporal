@@ -9,7 +9,7 @@ golemporal is a Temporal SDK framework for Go that uses protobuf-based code gene
 ## Common Commands
 
 ```bash
-# Install dependencies
+# Install dependencies and clean up unused imports
 go mod tidy
 
 # Build all packages
