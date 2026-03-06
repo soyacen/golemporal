@@ -45,7 +45,7 @@ var (
 
 var flags flag.FlagSet
 
-var Version = "v0.0.4"
+var Version = "v0.1.0"
 
 func main() {
 	if len(os.Args) == 2 && os.Args[1] == "--version" {
