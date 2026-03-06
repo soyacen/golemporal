@@ -76,7 +76,6 @@ The project uses a proto-first approach:
 1. **Define services in `.proto` files**:
    - Services ending with `Workflow` are treated as workflow services
    - Services ending with `Activity` are treated as activity services
-   - Only one workflow service per proto file is supported
 
 2. **Generate code**:
    ```bash

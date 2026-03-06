@@ -62,18 +62,15 @@ func main() {
 			if len(file.Services) <= 0 {
 				continue
 			}
-			var workflowCount int
+			var count int
 			for _, svc := range file.Services {
 				serviceName := string(svc.Desc.Name())
-				if strings.HasSuffix(serviceName, "Workflow") {
-					workflowCount++
+				if strings.HasSuffix(serviceName, "Workflow") || strings.HasSuffix(serviceName, "Activity") {
+					count++
 				}
 			}
-			if workflowCount <= 0 {
+			if count <= 0 {
 				continue
-			}
-			if workflowCount > 1 {
-				return fmt.Errorf("only one workflow service is supported")
 			}
 			generateFile(plugin, file)
 		}
@@ -99,18 +96,17 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) {
 		}
 	}
 
-	var workflow *protogen.Service
+	var workflows []*protogen.Service
 	// only one workflow service is supported, so we can break after the first one
 	for _, svc := range file.Services {
 		serviceName := string(svc.Desc.Name())
 		if strings.HasSuffix(serviceName, "Workflow") {
 			generateWorkflowClient(g, svc)
 			generateWorkflowServer(g, svc)
-			workflow = svc
-			break
+			workflows = append(workflows, svc)
 		}
 	}
-	generateRegisterFunction(g, workflow, activities)
+	generateRegisterFunction(g, workflows, activities)
 }
 
 func generateActivityClient(g *protogen.GeneratedFile, svc *protogen.Service) {
@@ -232,35 +228,40 @@ func generateWorkflowServer(g *protogen.GeneratedFile, svc *protogen.Service) {
 	g.P()
 }
 
-func generateRegisterFunction(g *protogen.GeneratedFile, workflow *protogen.Service, activities []*protogen.Service) {
-	workflowName := string(workflow.Desc.Name()) + "Server"
-	g.P("func Register", string(workflow.Desc.Name()), "Worker(")
-	g.P("w ", workerContextIdent, ",")
-	g.P(toLowerCase(workflowName), " ", workflowName, ",")
+func generateRegisterFunction(g *protogen.GeneratedFile, workflows []*protogen.Service, activities []*protogen.Service) {
 	for _, activity := range activities {
 		activityName := string(activity.Desc.Name()) + "Server"
-		g.P(toLowerCase(activityName), " ", activityName, ",")
-	}
-	g.P(") {")
-	for _, activity := range activities {
-		activityName := string(activity.Desc.Name()) + "Server"
+		g.P("func Register", string(activity.Desc.Name()), "(")
+		g.P("wk ", workerContextIdent, ",")
+		g.P("server ", activityName, ",")
+		g.P(") {")
 		for _, method := range activity.Methods {
-			g.P("w.RegisterActivityWithOptions(", toLowerCase(activityName), ".", method.Desc.Name(), ", ", activityRegisterOptionsIdent, "{")
+			g.P("wk.RegisterActivityWithOptions(server.", method.Desc.Name(), ", ", activityRegisterOptionsIdent, "{")
 			g.P("Name: ", strconv.Quote(methodFullName(method)), ",")
 			g.P("DisableAlreadyRegisteredCheck: true,")
 			g.P("})")
 			g.P()
 		}
-	}
-	for _, method := range workflow.Methods {
-		g.P("w.RegisterWorkflowWithOptions(", toLowerCase(workflowName), ".", method.Desc.Name(), ", workflow.RegisterOptions{")
-		g.P("Name: ", strconv.Quote(methodFullName(method)), ",")
-		g.P("DisableAlreadyRegisteredCheck: true,")
-		g.P("})")
+		g.P("}")
 		g.P()
 	}
-	g.P("}")
-	g.P()
+
+	for _, workflow := range workflows {
+		workflowName := string(workflow.Desc.Name()) + "Server"
+		g.P("func Register", string(workflow.Desc.Name()), "(")
+		g.P("wk ", workerContextIdent, ",")
+		g.P("server ", workflowName, ",")
+		g.P(") {")
+		for _, method := range workflow.Methods {
+			g.P("wk.RegisterWorkflowWithOptions(server.", method.Desc.Name(), ", workflow.RegisterOptions{")
+			g.P("Name: ", strconv.Quote(methodFullName(method)), ",")
+			g.P("DisableAlreadyRegisteredCheck: true,")
+			g.P("})")
+			g.P()
+		}
+		g.P("}")
+		g.P()
+	}
 }
 
 func toLowerCase(s string) string {

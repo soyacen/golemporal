@@ -430,9 +430,10 @@ const file_api_example_proto_rawDesc = "" +
 	"\fMultiRequest\x12\x14\n" +
 	"\x05count\x18\x01 \x01(\x05R\x05count\"'\n" +
 	"\rMultiResponse\x12\x16\n" +
-	"\x06result\x18\x01 \x01(\x05R\x06result2\xc3\x01\n" +
-	"\x0fGreeterWorkflow\x12T\n" +
-	"\x05Hello\x12$.golemporal.example.api.HelloRequest\x1a%.golemporal.example.api.HelloResponse\x12Z\n" +
+	"\x06result\x18\x01 \x01(\x05R\x06result2e\n" +
+	"\rHelloWorkflow\x12T\n" +
+	"\x05Hello\x12$.golemporal.example.api.HelloRequest\x1a%.golemporal.example.api.HelloResponse2m\n" +
+	"\x0fGoodbyeWorkflow\x12Z\n" +
 	"\aGoodbye\x12&.golemporal.example.api.GoodbyeRequest\x1a'.golemporal.example.api.GoodbyeResponse2]\n" +
 	"\vAddActivity\x12N\n" +
 	"\x03Add\x12\".golemporal.example.api.AddRequest\x1a#.golemporal.example.api.AddResponse2e\n" +
@@ -463,12 +464,12 @@ var file_api_example_proto_goTypes = []any{
 	(*MultiResponse)(nil),   // 7: golemporal.example.api.MultiResponse
 }
 var file_api_example_proto_depIdxs = []int32{
-	0, // 0: golemporal.example.api.GreeterWorkflow.Hello:input_type -> golemporal.example.api.HelloRequest
-	2, // 1: golemporal.example.api.GreeterWorkflow.Goodbye:input_type -> golemporal.example.api.GoodbyeRequest
+	0, // 0: golemporal.example.api.HelloWorkflow.Hello:input_type -> golemporal.example.api.HelloRequest
+	2, // 1: golemporal.example.api.GoodbyeWorkflow.Goodbye:input_type -> golemporal.example.api.GoodbyeRequest
 	4, // 2: golemporal.example.api.AddActivity.Add:input_type -> golemporal.example.api.AddRequest
 	6, // 3: golemporal.example.api.MultiActivity.Multi:input_type -> golemporal.example.api.MultiRequest
-	1, // 4: golemporal.example.api.GreeterWorkflow.Hello:output_type -> golemporal.example.api.HelloResponse
-	3, // 5: golemporal.example.api.GreeterWorkflow.Goodbye:output_type -> golemporal.example.api.GoodbyeResponse
+	1, // 4: golemporal.example.api.HelloWorkflow.Hello:output_type -> golemporal.example.api.HelloResponse
+	3, // 5: golemporal.example.api.GoodbyeWorkflow.Goodbye:output_type -> golemporal.example.api.GoodbyeResponse
 	5, // 6: golemporal.example.api.AddActivity.Add:output_type -> golemporal.example.api.AddResponse
 	7, // 7: golemporal.example.api.MultiActivity.Multi:output_type -> golemporal.example.api.MultiResponse
 	4, // [4:8] is the sub-list for method output_type
@@ -491,7 +492,7 @@ func file_api_example_proto_init() {
 			NumEnums:      0,
 			NumMessages:   8,
 			NumExtensions: 0,
-			NumServices:   3,
+			NumServices:   4,
 		},
 		GoTypes:           file_api_example_proto_goTypes,
 		DependencyIndexes: file_api_example_proto_depIdxs,

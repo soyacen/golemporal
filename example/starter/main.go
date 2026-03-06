@@ -21,14 +21,15 @@ func main() {
 
 	taskQueue := "golemporal-example"
 
-	gc := api.NewGreeterWorkflowClient(c, taskQueue)
+	hc := api.NewHelloWorkflowClient(c, taskQueue)
 	var helloResult api.HelloResponse
-	if err := gc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5}, starter.GetResult(&helloResult)); err != nil {
+	if err := hc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5}, starter.GetResult(&helloResult)); err != nil {
 		log.Fatal(err)
 	}
 
 	log.Printf("hello workflow completed message: %s, result: %d", helloResult.Message, helloResult.Result)
 
+	gc := api.NewGoodbyeWorkflowClient(c, taskQueue)
 	var goodbyeResult api.GoodbyeResponse
 	if err := gc.Goodbye(ctx, &api.GoodbyeRequest{Name: "World", Count: 10}, starter.GetResult(&goodbyeResult)); err != nil {
 		log.Fatal(err)

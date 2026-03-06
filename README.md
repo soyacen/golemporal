@@ -142,19 +142,17 @@ func main() {
 
     w := worker.New(c, "my-task-queue", worker.Options{})
 
-    // Register workflow and activities using generated function
-    example.RegisterGreeterWorkflowWorker(w,
-        &GreeterWorkflowServer{
-            activity: example.NewGreeterActivityClient(),
-        },
-        &GreeterActivityServer{},
-    )
+    // Register workflow and activities using generated functions
+    example.RegisterGreeterWorkflow(w, &GreeterWorkflowServer{
+        activity: example.NewGreeterActivityClient(),
+    })
+    example.RegisterGreeterActivity(w, &GreeterActivityServer{})
 
     if err := w.Start(); err != nil {
         log.Fatalln("Unable to start worker", err)
     }
-    defer w.Stop()
 
+    // Wait for interrupt
     <-make(chan struct{})
 }
 
@@ -239,7 +237,8 @@ The `*_temporal.pb.go` file contains the following generated code:
 | `ActivityServer` | Interface that activity implementations must satisfy |
 | `WorkflowClient` | Interface for starting workflow executions |
 | `WorkflowServer` | Interface that workflow implementations must satisfy |
-| `Register*Worker` | Function to register workflow/activity with a Temporal worker |
+| `Register*Activity` | Function to register activity with a Temporal worker |
+| `Register*Workflow` | Function to register workflow with a Temporal worker |
 
 ## Proto Service Naming
 
@@ -248,8 +247,7 @@ The code generator recognizes services by their naming convention:
 - **Workflow Services**: Must end with `Workflow` (e.g., `GreeterWorkflow`)
 - **Activity Services**: Must end with `Activity` (e.g., `GreeterActivity`)
 
-**Limitations:**
-- Only one workflow service per proto file is supported
+**Note:**
 - Service names are case-sensitive
 
 ## Workflow Options
@@ -279,15 +277,26 @@ result, err := gc.Hello(ctx, &example.HelloRequest{Name: "World"},
 | Option | Description |
 |--------|-------------|
 | `ID(string)` | Set a unique workflow ID |
+| `GetID(*string)` | Get the assigned workflow ID after execution |
+| `GetRunID(*string)` | Get the run ID after execution |
 | `TaskQueue(string)` | Override the default task queue |
 | `WorkflowExecutionTimeout(time.Duration)` | Total workflow execution timeout |
 | `WorkflowRunTimeout(time.Duration)` | Single workflow run timeout |
 | `WorkflowTaskTimeout(time.Duration)` | Workflow task timeout |
+| `WorkflowIDReusePolicy(enums.WorkflowIdReusePolicy)` | Workflow ID reuse policy |
+| `WorkflowIDConflictPolicy(enums.WorkflowIdConflictPolicy)` | Workflow ID conflict policy |
+| `WorkflowExecutionErrorWhenAlreadyStarted(bool)` | Return error when workflow already running |
 | `RetryPolicy(*temporal.RetryPolicy)` | Retry policy for workflow |
 | `CronSchedule(string)` | Cron schedule for periodic execution |
 | `Memo(map[string]any)` | Workflow memo data |
-| `SearchAttributes(map[string]any)` | Search attributes for workflow |
-| `GetResult(*T)` | Capture workflow result into pointer |
+| `TypedSearchAttributes(temporal.SearchAttributes)` | Typed search attributes for workflow |
+| `EnableEagerStart(bool)` | Request eager execution if local worker available |
+| `StartDelay(time.Duration)` | Delay before dispatching first workflow task |
+| `StaticSummary(string)` | Static summary for the workflow |
+| `StaticDetails(string)` | Static details for the workflow |
+| `VersioningOverride(client.VersioningOverride)` | Versioning override for the workflow |
+| `Priority(temporal.Priority)` | Priority for the workflow |
+| `GetResult(any)` | Capture workflow result into pointer |
 
 ## Example
 

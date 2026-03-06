@@ -24,8 +24,11 @@ message GoodbyeResponse {
   int32 result = 2;
 }
 
-service GreeterWorkflow {
+service HelloWorkflow {
   rpc Hello(HelloRequest) returns (HelloResponse);
+}
+
+service GoodbyeWorkflow {
   rpc Goodbye(GoodbyeRequest) returns (GoodbyeResponse);
 }
 

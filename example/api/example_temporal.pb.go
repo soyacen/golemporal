@@ -57,23 +57,22 @@ type MultiActivityServer interface {
 	Multi(context.Context, *MultiRequest) (*MultiResponse, error)
 }
 
-type GreeterWorkflowClient interface {
+type HelloWorkflowClient interface {
 	Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) error
-	Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) error
 }
 
-type greeterWorkflowClient struct {
+type helloWorkflowClient struct {
 	c         client.Client
 	taskQueue string
 }
 
-func NewGreeterWorkflowClient(c client.Client, taskQueue string) GreeterWorkflowClient {
-	return &greeterWorkflowClient{c: c, taskQueue: taskQueue}
+func NewHelloWorkflowClient(c client.Client, taskQueue string) HelloWorkflowClient {
+	return &helloWorkflowClient{c: c, taskQueue: taskQueue}
 }
 
-func (c *greeterWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) error {
+func (c *helloWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) error {
 	options := starter.NewOptions(c.taskQueue, opts...)
-	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, "/golemporal.example.api.GreeterWorkflow/Hello", in)
+	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, "/golemporal.example.api.HelloWorkflow/Hello", in)
 	if err != nil {
 		return err
 	}
@@ -93,56 +92,88 @@ func (c *greeterWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opt
 	return nil
 }
 
-func (c *greeterWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) error {
-	options := starter.NewOptions(c.taskQueue, opts...)
-	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, "/golemporal.example.api.GreeterWorkflow/Goodbye", in)
-	if err != nil {
-		return err
-	}
-	if options.WorkflowID != nil {
-		workflowID := run.GetID()
-		*options.WorkflowID = workflowID
-	}
-	if options.RunID != nil {
-		runID := run.GetRunID()
-		*options.RunID = runID
-	}
-	if options.Result != nil {
-		if err := run.Get(ctx, options.Result); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-type GreeterWorkflowServer interface {
+type HelloWorkflowServer interface {
 	Hello(workflow.Context, *HelloRequest) (*HelloResponse, error)
+}
+
+type GoodbyeWorkflowClient interface {
+	Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) error
+}
+
+type goodbyeWorkflowClient struct {
+	c         client.Client
+	taskQueue string
+}
+
+func NewGoodbyeWorkflowClient(c client.Client, taskQueue string) GoodbyeWorkflowClient {
+	return &goodbyeWorkflowClient{c: c, taskQueue: taskQueue}
+}
+
+func (c *goodbyeWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) error {
+	options := starter.NewOptions(c.taskQueue, opts...)
+	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, "/golemporal.example.api.GoodbyeWorkflow/Goodbye", in)
+	if err != nil {
+		return err
+	}
+	if options.WorkflowID != nil {
+		workflowID := run.GetID()
+		*options.WorkflowID = workflowID
+	}
+	if options.RunID != nil {
+		runID := run.GetRunID()
+		*options.RunID = runID
+	}
+	if options.Result != nil {
+		if err := run.Get(ctx, options.Result); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+type GoodbyeWorkflowServer interface {
 	Goodbye(workflow.Context, *GoodbyeRequest) (*GoodbyeResponse, error)
 }
 
-func RegisterGreeterWorkflowWorker(
-	w worker.Worker,
-	greeterWorkflowServer GreeterWorkflowServer,
-	addActivityServer AddActivityServer,
-	multiActivityServer MultiActivityServer,
+func RegisterAddActivity(
+	wk worker.Worker,
+	server AddActivityServer,
 ) {
-	w.RegisterActivityWithOptions(addActivityServer.Add, activity.RegisterOptions{
+	wk.RegisterActivityWithOptions(server.Add, activity.RegisterOptions{
 		Name:                          "/golemporal.example.api.AddActivity/Add",
 		DisableAlreadyRegisteredCheck: true,
 	})
 
-	w.RegisterActivityWithOptions(multiActivityServer.Multi, activity.RegisterOptions{
+}
+
+func RegisterMultiActivity(
+	wk worker.Worker,
+	server MultiActivityServer,
+) {
+	wk.RegisterActivityWithOptions(server.Multi, activity.RegisterOptions{
 		Name:                          "/golemporal.example.api.MultiActivity/Multi",
 		DisableAlreadyRegisteredCheck: true,
 	})
 
-	w.RegisterWorkflowWithOptions(greeterWorkflowServer.Hello, workflow.RegisterOptions{
-		Name:                          "/golemporal.example.api.GreeterWorkflow/Hello",
+}
+
+func RegisterHelloWorkflow(
+	wk worker.Worker,
+	server HelloWorkflowServer,
+) {
+	wk.RegisterWorkflowWithOptions(server.Hello, workflow.RegisterOptions{
+		Name:                          "/golemporal.example.api.HelloWorkflow/Hello",
 		DisableAlreadyRegisteredCheck: true,
 	})
 
-	w.RegisterWorkflowWithOptions(greeterWorkflowServer.Goodbye, workflow.RegisterOptions{
-		Name:                          "/golemporal.example.api.GreeterWorkflow/Goodbye",
+}
+
+func RegisterGoodbyeWorkflow(
+	wk worker.Worker,
+	server GoodbyeWorkflowServer,
+) {
+	wk.RegisterWorkflowWithOptions(server.Goodbye, workflow.RegisterOptions{
+		Name:                          "/golemporal.example.api.GoodbyeWorkflow/Goodbye",
 		DisableAlreadyRegisteredCheck: true,
 	})
 

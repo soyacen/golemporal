@@ -25,15 +25,15 @@ func main() {
 	// Create worker
 	taskQueue := "golemporal-example"
 	w := worker.New(c, taskQueue, worker.Options{})
+	wf := &GreeterWorkflowServer{
+		addActivity:   api.NewAddActivityClient(),
+		multiActivity: api.NewMultiActivityClient(),
+	}
+	api.RegisterHelloWorkflow(w, wf)
+	api.RegisterGoodbyeWorkflow(w, wf)
+	api.RegisterAddActivity(w, &AddActivityServer{})
+	api.RegisterMultiActivity(w, &MultiActivityServer{})
 
-	api.RegisterGreeterWorkflowWorker(w,
-		&GreeterWorkflowServer{
-			addActivity:   api.NewAddActivityClient(),
-			multiActivity: api.NewMultiActivityClient(),
-		},
-		&AddActivityServer{},
-		&MultiActivityServer{},
-	)
 	if err := w.Start(); err != nil {
 		log.Fatalln("Unable to start worker", err)
 	}
