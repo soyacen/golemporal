@@ -43,6 +43,11 @@ var (
 	starterNewOptionsIdent = starterPackage.Ident("NewOptions")
 )
 
+var (
+	protobufPackage = protogen.GoImportPath("github.com/soyacen/golemporal/protobuf")
+	metadataIdent     = protobufPackage.Ident("Metadata")
+)
+
 var flags flag.FlagSet
 
 var Version = "v0.1.0"
@@ -110,11 +115,17 @@ func generateFile(gen *protogen.Plugin, file *protogen.File) {
 }
 
 func generateActivityClient(g *protogen.GeneratedFile, svc *protogen.Service) {
+	g.P("var (")
+	for _, method := range svc.Methods {
+		g.P(actitityTypeFullName(method), " = ", strconv.Quote(methodFullName(method)))
+	}
+	g.P(")")
+
 	clientName := string(svc.Desc.Name()) + "Client"
 	g.P("type ", clientName, " interface {")
 	for _, method := range svc.Methods {
-		inputType := method.Input.GoIdent.GoName
-		outputType := method.Output.GoIdent.GoName
+		inputType := method.Input.GoIdent
+		outputType := method.Output.GoIdent
 		g.P("", method.Desc.Name(), "(ctx ", workflowContextIdent, ", in *", inputType, ") (*", outputType, ", error)")
 	}
 	g.P("}")
@@ -132,12 +143,12 @@ func generateActivityClient(g *protogen.GeneratedFile, svc *protogen.Service) {
 
 	// Generate methods
 	for _, method := range svc.Methods {
-		inputType := method.Input.GoIdent.GoName
-		outputType := method.Output.GoIdent.GoName
+		inputType := method.Input.GoIdent
+		outputType := method.Output.GoIdent
 		methodName := string(method.Desc.Name())
 		g.P("func (c *", toLowerCase(clientName), ") ", methodName, "(ctx ", workflowContextIdent, ", in *", inputType, ") (*", outputType, ", error) {")
 		g.P("var out ", outputType)
-		g.P("err := workflow.ExecuteActivity(ctx, ", strconv.Quote(methodFullName(method)), ", in).Get(ctx, &out)")
+		g.P("err := workflow.ExecuteActivity(ctx, ", actitityTypeFullName(method), ", in).Get(ctx, &out)")
 		g.P("if err != nil {")
 		g.P("return nil, err")
 		g.P("}")
@@ -152,8 +163,8 @@ func generateActivityServer(g *protogen.GeneratedFile, svc *protogen.Service) {
 	// Generate interface
 	g.P("type ", serverName, " interface {")
 	for _, method := range svc.Methods {
-		inputType := method.Input.GoIdent.GoName
-		outputType := method.Output.GoIdent.GoName
+		inputType := method.Input.GoIdent
+		outputType := method.Output.GoIdent
 		g.P("", method.Desc.Name(), "(", contextIdent, ", *", inputType, ") (*", outputType, ", error)")
 	}
 	g.P("}")
@@ -161,13 +172,18 @@ func generateActivityServer(g *protogen.GeneratedFile, svc *protogen.Service) {
 }
 
 func generateWorkflowClient(g *protogen.GeneratedFile, svc *protogen.Service) {
+	g.P("var (")
+	for _, method := range svc.Methods {
+		g.P(workflowTypeFullName(method), " = ", strconv.Quote(methodFullName(method)))
+	}
+	g.P(")")
+
 	clientName := string(svc.Desc.Name()) + "Client"
 	// Generate interface
 	g.P("type ", clientName, " interface {")
 	for _, method := range svc.Methods {
-		inputType := method.Input.GoIdent.GoName
-		// outputType := method.Output.GoIdent.GoName
-		g.P("", method.Desc.Name(), "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") error")
+		inputType := method.Input.GoIdent
+		g.P(method.Desc.Name(), "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") (*", metadataIdent, ", error)")
 	}
 	g.P("}")
 	g.P()
@@ -187,30 +203,25 @@ func generateWorkflowClient(g *protogen.GeneratedFile, svc *protogen.Service) {
 
 	// Generate methods
 	for _, method := range svc.Methods {
-		inputType := method.Input.GoIdent.GoName
-		// outputType := method.Output.GoIdent.GoName
+		inputType := method.Input.GoIdent
 		methodName := string(method.Desc.Name())
-
-		g.P("func (c *", toLowerCase(clientName), ") ", methodName, "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") error {")
+		g.P("func (c *", toLowerCase(clientName), ") ", methodName, "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") (*", metadataIdent, ", error) {")
 		g.P("options := ", starterNewOptionsIdent, "(c.taskQueue, opts...)")
-		g.P("run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, ", strconv.Quote(methodFullName(method)), ", in)")
+		g.P("run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, ", workflowTypeFullName(method), ", in)")
 		g.P("if err != nil {")
-		g.P("return err")
+		g.P("return nil, err")
 		g.P("}")
-		g.P("if options.WorkflowID != nil {")
-		g.P("workflowID := run.GetID()")
-		g.P("*options.WorkflowID = workflowID")
+		g.P("md := &", metadataIdent, "{}")
+		g.P("md.WorkflowId = run.GetID()")
+		g.P("md.RunId = run.GetRunID()")
+		g.P("md.WorkflowType = ", workflowTypeFullName(method))
+		g.P("if options.Result == nil {")
+		g.P("return md, nil")
 		g.P("}")
-		g.P("if options.RunID != nil {")
-		g.P("runID := run.GetRunID()")
-		g.P("*options.RunID = runID")
-		g.P("}")
-		g.P("if options.Result != nil {")
 		g.P("if err := run.Get(ctx, options.Result); err != nil {")
-		g.P("return err")
+		g.P("return nil, err")
 		g.P("}")
-		g.P("}")
-		g.P("return nil")
+		g.P("return md, nil")
 		g.P("}")
 		g.P()
 	}
@@ -220,8 +231,8 @@ func generateWorkflowServer(g *protogen.GeneratedFile, svc *protogen.Service) {
 	serverName := string(svc.Desc.Name()) + "Server"
 	g.P("type ", serverName, " interface {")
 	for _, method := range svc.Methods {
-		inputType := method.Input.GoIdent.GoName
-		outputType := method.Output.GoIdent.GoName
+		inputType := method.Input.GoIdent
+		outputType := method.Output.GoIdent
 		g.P("", method.Desc.Name(), "(", workflowContextIdent, ", *", inputType, ") (*", outputType, ", error)")
 	}
 	g.P("}")
@@ -237,7 +248,7 @@ func generateRegisterFunction(g *protogen.GeneratedFile, workflows []*protogen.S
 		g.P(") {")
 		for _, method := range activity.Methods {
 			g.P("wk.RegisterActivityWithOptions(server.", method.Desc.Name(), ", ", activityRegisterOptionsIdent, "{")
-			g.P("Name: ", strconv.Quote(methodFullName(method)), ",")
+			g.P("Name: ", actitityTypeFullName(method), ",")
 			g.P("DisableAlreadyRegisteredCheck: true,")
 			g.P("})")
 			g.P()
@@ -254,7 +265,7 @@ func generateRegisterFunction(g *protogen.GeneratedFile, workflows []*protogen.S
 		g.P(") {")
 		for _, method := range workflow.Methods {
 			g.P("wk.RegisterWorkflowWithOptions(server.", method.Desc.Name(), ", workflow.RegisterOptions{")
-			g.P("Name: ", strconv.Quote(methodFullName(method)), ",")
+			g.P("Name: ", workflowTypeFullName(method), ",")
 			g.P("DisableAlreadyRegisteredCheck: true,")
 			g.P("})")
 			g.P()
@@ -269,6 +280,14 @@ func toLowerCase(s string) string {
 		return s
 	}
 	return strings.ToLower(s[:1]) + s[1:]
+}
+
+func workflowTypeFullName(method *protogen.Method) string {
+	return fmt.Sprintf("%s_%s_WorkflowType", method.Parent.GoName, method.GoName)
+}
+
+func actitityTypeFullName(method *protogen.Method) string {
+	return fmt.Sprintf("%s_%s_ActitityType", method.Parent.GoName, method.GoName)
 }
 
 func methodFullName(protoMethod *protogen.Method) string {

@@ -3,6 +3,7 @@ package starter
 import (
 	"time"
 
+	"github.com/gogo/protobuf/proto"
 	enums "go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
@@ -10,26 +11,12 @@ import (
 
 type Options struct {
 	client.StartWorkflowOptions
-	WorkflowID *string
-	RunID      *string
-	Result     any
+	Result proto.Message
 }
 
 type Option func(*Options)
 
-func GetID(id *string) Option {
-	return func(o *Options) {
-		o.WorkflowID = id
-	}
-}
-
-func GetRunID(id *string) Option {
-	return func(o *Options) {
-		o.RunID = id
-	}
-}
-
-func GetResult(res any) Option {
+func GetResult(res proto.Message) Option {
 	return func(o *Options) {
 		o.Result = res
 	}

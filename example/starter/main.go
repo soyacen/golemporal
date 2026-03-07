@@ -23,16 +23,18 @@ func main() {
 
 	hc := api.NewHelloWorkflowClient(c, taskQueue)
 	var helloResult api.HelloResponse
-	if err := hc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5}, starter.GetResult(&helloResult)); err != nil {
+	hlMd, err := hc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5}, starter.GetResult(&helloResult))
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("hello workflow completed message: %s, result: %d", helloResult.Message, helloResult.Result)
+	log.Printf("hello workflow completed, workflow_id: %s, workflow_type: %s, run_id: %s, message: %s, result: %d", hlMd.GetWorkflowId(), hlMd.GetWorkflowType(), hlMd.GetRunId(), helloResult.Message, helloResult.Result)
 
 	gc := api.NewGoodbyeWorkflowClient(c, taskQueue)
 	var goodbyeResult api.GoodbyeResponse
-	if err := gc.Goodbye(ctx, &api.GoodbyeRequest{Name: "World", Count: 10}, starter.GetResult(&goodbyeResult)); err != nil {
+	bgMd, err := gc.Goodbye(ctx, &api.GoodbyeRequest{Name: "World", Count: 10}, starter.GetResult(&goodbyeResult))
+	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("goodbye workflow completed message: %s, result: %d", goodbyeResult.Message, goodbyeResult.Result)
+	log.Printf("goodbye workflow completed , workflow_id: %s, workflow_type: %s, run_id: %s, message: %s, result: %d", bgMd.GetWorkflowId(), bgMd.GetWorkflowType(), bgMd.GetRunId(), goodbyeResult.Message, goodbyeResult.Result)
 }

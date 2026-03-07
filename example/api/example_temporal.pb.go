@@ -4,11 +4,16 @@ package api
 
 import (
 	context "context"
+	protobuf "github.com/soyacen/golemporal/protobuf"
 	starter "github.com/soyacen/golemporal/starter"
 	activity "go.temporal.io/sdk/activity"
 	client "go.temporal.io/sdk/client"
 	worker "go.temporal.io/sdk/worker"
 	workflow "go.temporal.io/sdk/workflow"
+)
+
+var (
+	AddActivity_Add_ActitityType = "/golemporal.example.api.AddActivity/Add"
 )
 
 type AddActivityClient interface {
@@ -23,7 +28,7 @@ type addActivityClient struct{}
 
 func (c *addActivityClient) Add(ctx workflow.Context, in *AddRequest) (*AddResponse, error) {
 	var out AddResponse
-	err := workflow.ExecuteActivity(ctx, "/golemporal.example.api.AddActivity/Add", in).Get(ctx, &out)
+	err := workflow.ExecuteActivity(ctx, AddActivity_Add_ActitityType, in).Get(ctx, &out)
 	if err != nil {
 		return nil, err
 	}
@@ -33,6 +38,10 @@ func (c *addActivityClient) Add(ctx workflow.Context, in *AddRequest) (*AddRespo
 type AddActivityServer interface {
 	Add(context.Context, *AddRequest) (*AddResponse, error)
 }
+
+var (
+	MultiActivity_Multi_ActitityType = "/golemporal.example.api.MultiActivity/Multi"
+)
 
 type MultiActivityClient interface {
 	Multi(ctx workflow.Context, in *MultiRequest) (*MultiResponse, error)
@@ -46,7 +55,7 @@ type multiActivityClient struct{}
 
 func (c *multiActivityClient) Multi(ctx workflow.Context, in *MultiRequest) (*MultiResponse, error) {
 	var out MultiResponse
-	err := workflow.ExecuteActivity(ctx, "/golemporal.example.api.MultiActivity/Multi", in).Get(ctx, &out)
+	err := workflow.ExecuteActivity(ctx, MultiActivity_Multi_ActitityType, in).Get(ctx, &out)
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +66,12 @@ type MultiActivityServer interface {
 	Multi(context.Context, *MultiRequest) (*MultiResponse, error)
 }
 
+var (
+	HelloWorkflow_Hello_WorkflowType = "/golemporal.example.api.HelloWorkflow/Hello"
+)
+
 type HelloWorkflowClient interface {
-	Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) error
+	Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) (*protobuf.Metadata, error)
 }
 
 type helloWorkflowClient struct {
@@ -70,34 +83,35 @@ func NewHelloWorkflowClient(c client.Client, taskQueue string) HelloWorkflowClie
 	return &helloWorkflowClient{c: c, taskQueue: taskQueue}
 }
 
-func (c *helloWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) error {
+func (c *helloWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) (*protobuf.Metadata, error) {
 	options := starter.NewOptions(c.taskQueue, opts...)
-	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, "/golemporal.example.api.HelloWorkflow/Hello", in)
+	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, HelloWorkflow_Hello_WorkflowType, in)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if options.WorkflowID != nil {
-		workflowID := run.GetID()
-		*options.WorkflowID = workflowID
+	md := &protobuf.Metadata{}
+	md.WorkflowId = run.GetID()
+	md.RunId = run.GetRunID()
+	md.WorkflowType = HelloWorkflow_Hello_WorkflowType
+	if options.Result == nil {
+		return md, nil
 	}
-	if options.RunID != nil {
-		runID := run.GetRunID()
-		*options.RunID = runID
+	if err := run.Get(ctx, options.Result); err != nil {
+		return nil, err
 	}
-	if options.Result != nil {
-		if err := run.Get(ctx, options.Result); err != nil {
-			return err
-		}
-	}
-	return nil
+	return md, nil
 }
 
 type HelloWorkflowServer interface {
 	Hello(workflow.Context, *HelloRequest) (*HelloResponse, error)
 }
 
+var (
+	GoodbyeWorkflow_Goodbye_WorkflowType = "/golemporal.example.api.GoodbyeWorkflow/Goodbye"
+)
+
 type GoodbyeWorkflowClient interface {
-	Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) error
+	Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) (*protobuf.Metadata, error)
 }
 
 type goodbyeWorkflowClient struct {
@@ -109,26 +123,23 @@ func NewGoodbyeWorkflowClient(c client.Client, taskQueue string) GoodbyeWorkflow
 	return &goodbyeWorkflowClient{c: c, taskQueue: taskQueue}
 }
 
-func (c *goodbyeWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) error {
+func (c *goodbyeWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) (*protobuf.Metadata, error) {
 	options := starter.NewOptions(c.taskQueue, opts...)
-	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, "/golemporal.example.api.GoodbyeWorkflow/Goodbye", in)
+	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, GoodbyeWorkflow_Goodbye_WorkflowType, in)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	if options.WorkflowID != nil {
-		workflowID := run.GetID()
-		*options.WorkflowID = workflowID
+	md := &protobuf.Metadata{}
+	md.WorkflowId = run.GetID()
+	md.RunId = run.GetRunID()
+	md.WorkflowType = GoodbyeWorkflow_Goodbye_WorkflowType
+	if options.Result == nil {
+		return md, nil
 	}
-	if options.RunID != nil {
-		runID := run.GetRunID()
-		*options.RunID = runID
+	if err := run.Get(ctx, options.Result); err != nil {
+		return nil, err
 	}
-	if options.Result != nil {
-		if err := run.Get(ctx, options.Result); err != nil {
-			return err
-		}
-	}
-	return nil
+	return md, nil
 }
 
 type GoodbyeWorkflowServer interface {
@@ -140,7 +151,7 @@ func RegisterAddActivity(
 	server AddActivityServer,
 ) {
 	wk.RegisterActivityWithOptions(server.Add, activity.RegisterOptions{
-		Name:                          "/golemporal.example.api.AddActivity/Add",
+		Name:                          AddActivity_Add_ActitityType,
 		DisableAlreadyRegisteredCheck: true,
 	})
 
@@ -151,7 +162,7 @@ func RegisterMultiActivity(
 	server MultiActivityServer,
 ) {
 	wk.RegisterActivityWithOptions(server.Multi, activity.RegisterOptions{
-		Name:                          "/golemporal.example.api.MultiActivity/Multi",
+		Name:                          MultiActivity_Multi_ActitityType,
 		DisableAlreadyRegisteredCheck: true,
 	})
 
@@ -162,7 +173,7 @@ func RegisterHelloWorkflow(
 	server HelloWorkflowServer,
 ) {
 	wk.RegisterWorkflowWithOptions(server.Hello, workflow.RegisterOptions{
-		Name:                          "/golemporal.example.api.HelloWorkflow/Hello",
+		Name:                          HelloWorkflow_Hello_WorkflowType,
 		DisableAlreadyRegisteredCheck: true,
 	})
 
@@ -173,7 +184,7 @@ func RegisterGoodbyeWorkflow(
 	server GoodbyeWorkflowServer,
 ) {
 	wk.RegisterWorkflowWithOptions(server.Goodbye, workflow.RegisterOptions{
-		Name:                          "/golemporal.example.api.GoodbyeWorkflow/Goodbye",
+		Name:                          GoodbyeWorkflow_Goodbye_WorkflowType,
 		DisableAlreadyRegisteredCheck: true,
 	})
 

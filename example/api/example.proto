@@ -1,7 +1,5 @@
 syntax = "proto3";
-
 package golemporal.example.api;
-
 option go_package = "github.com/soyacen/golemporal/example/api;api";
 
 message HelloRequest {
