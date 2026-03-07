@@ -65,34 +65,62 @@ Create a `.proto` file with your workflow and activity definitions:
 // example.proto
 syntax = "proto3";
 
-package example;
+package golemporal.example.api;
 
-option go_package = "example;example";
+option go_package = "github.com/soyacen/golemporal/example/api;api";
 
-// Workflow service (must end with "Workflow")
-service GreeterWorkflow {
+// Workflow services (must end with "Workflow")
+service HelloWorkflow {
   rpc Hello(HelloRequest) returns (HelloResponse);
 }
 
-// Activity service (must end with "Activity")
-service GreeterActivity {
-  rpc Greet(GreetRequest) returns (GreetResponse);
+service GoodbyeWorkflow {
+  rpc Goodbye(GoodbyeRequest) returns (GoodbyeResponse);
+}
+
+// Activity services (must end with "Activity")
+service AddActivity {
+  rpc Add(AddRequest) returns (AddResponse);
+}
+
+service MultiActivity {
+  rpc Multi(MultiRequest) returns (MultiResponse);
 }
 
 message HelloRequest {
   string name = 1;
+  int32 count = 2;
 }
 
 message HelloResponse {
   string message = 1;
+  int32 result = 2;
 }
 
-message GreetRequest {
+message GoodbyeRequest {
   string name = 1;
+  int32 count = 2;
 }
 
-message GreetResponse {
+message GoodbyeResponse {
   string message = 1;
+  int32 result = 2;
+}
+
+message AddRequest {
+  int32 count = 1;
+}
+
+message AddResponse {
+  int32 result = 1;
+}
+
+message MultiRequest {
+  int32 count = 1;
+}
+
+message MultiResponse {
+  int32 result = 1;
 }
 ```
 
@@ -124,29 +152,39 @@ package main
 
 import (
     "context"
+    "fmt"
     "log"
     "time"
 
-    "example"
+    "github.com/soyacen/golemporal/example/api"
     "go.temporal.io/sdk/client"
     "go.temporal.io/sdk/worker"
     "go.temporal.io/sdk/workflow"
 )
 
 func main() {
-    c, err := client.Dial(client.Options{HostPort: client.DefaultHostPort})
+    // The client is a heavyweight object that should be created once per process.
+    c, err := client.Dial(client.Options{
+        HostPort: client.DefaultHostPort,
+    })
     if err != nil {
         log.Fatalln("Unable to create client", err)
     }
     defer c.Close()
 
-    w := worker.New(c, "my-task-queue", worker.Options{})
-
-    // Register workflow and activities using generated functions
-    example.RegisterGreeterWorkflow(w, &GreeterWorkflowServer{
-        activity: example.NewGreeterActivityClient(),
-    })
-    example.RegisterGreeterActivity(w, &GreeterActivityServer{})
+    // Create worker
+    taskQueue := "golemporal-example"
+    w := worker.New(c, taskQueue, worker.Options{})
+    wf := &GreeterWorkflowServer{
+        addActivity:   api.NewAddActivityClient(),
+        multiActivity: api.NewMultiActivityClient(),
+    }
+    
+    // Register workflows and activities using generated functions
+    api.RegisterHelloWorkflow(w, wf)
+    api.RegisterGoodbyeWorkflow(w, wf)
+    api.RegisterAddActivity(w, &AddActivityServer{})
+    api.RegisterMultiActivity(w, &MultiActivityServer{})
 
     if err := w.Start(); err != nil {
         log.Fatalln("Unable to start worker", err)
@@ -156,32 +194,61 @@ func main() {
     <-make(chan struct{})
 }
 
-// GreeterWorkflowServer implements the generated GreeterWorkflowServer interface
+// GreeterWorkflowServer implements the workflow interfaces
 type GreeterWorkflowServer struct {
-    activity example.GreeterActivityClient
+    addActivity   api.AddActivityClient
+    multiActivity api.MultiActivityClient
 }
 
-func (s *GreeterWorkflowServer) Hello(ctx workflow.Context, input *example.HelloRequest) (*example.HelloResponse, error) {
+func (s *GreeterWorkflowServer) Hello(ctx workflow.Context, input *api.HelloRequest) (*api.HelloResponse, error) {
     logger := workflow.GetLogger(ctx)
-    logger.Info("Starting HelloWorkflow", "name", input.Name)
-
-    ao := workflow.ActivityOptions{StartToCloseTimeout: 10 * time.Second}
+    logger.Info("HelloWorkflow starting")
+    ao := workflow.ActivityOptions{
+        StartToCloseTimeout: 10 * time.Second,
+    }
     ctx = workflow.WithActivityOptions(ctx, ao)
-
-    result, err := s.activity.Greet(ctx, &example.GreetRequest{Name: input.Name})
+    helloResult, err := s.addActivity.Add(ctx, &api.AddRequest{Count: input.GetCount()})
     if err != nil {
-        logger.Error("Activity failed", "error", err)
+        logger.Error("activity failed", "error", err)
         return nil, err
     }
-
-    return &example.HelloResponse{Message: result.Message}, nil
+    logger.Info("HelloWorkflow completed")
+    return &api.HelloResponse{
+        Message: fmt.Sprintf("Hello, %s! (result: %d)", input.Name, helloResult.Result),
+        Result:  helloResult.Result,
+    }, nil
 }
 
-// GreeterActivityServer implements the generated GreeterActivityServer interface
-type GreeterActivityServer struct{}
+func (s *GreeterWorkflowServer) Goodbye(ctx workflow.Context, input *api.GoodbyeRequest) (*api.GoodbyeResponse, error) {
+    logger := workflow.GetLogger(ctx)
+    logger.Info("GoodbyeWorkflow starting")
+    ao := workflow.ActivityOptions{
+        StartToCloseTimeout: 10 * time.Second,
+    }
+    ctx = workflow.WithActivityOptions(ctx, ao)
+    result, err := s.multiActivity.Multi(ctx, &api.MultiRequest{Count: input.GetCount()})
+    if err != nil {
+        logger.Error("activity failed", "error", err)
+        return nil, err
+    }
+    logger.Info("GoodbyeWorkflow completed")
+    return &api.GoodbyeResponse{
+        Message: fmt.Sprintf("Goodbye, %s! (result: %d)", input.Name, result.Result),
+        Result:  result.Result,
+    }, nil
+}
 
-func (s *GreeterActivityServer) Greet(ctx context.Context, input *example.GreetRequest) (*example.GreetResponse, error) {
-    return &example.GreetResponse{Message: "Hello, " + input.Name + "!"}, nil
+// Activity implementations
+type AddActivityServer struct{}
+
+func (s *AddActivityServer) Add(ctx context.Context, input *api.AddRequest) (*api.AddResponse, error) {
+    return &api.AddResponse{Result: input.Count + input.Count}, nil
+}
+
+type MultiActivityServer struct{}
+
+func (s *MultiActivityServer) Multi(ctx context.Context, input *api.MultiRequest) (*api.MultiResponse, error) {
+    return &api.MultiResponse{Result: input.Count * input.Count}, nil
 }
 ```
 
@@ -197,33 +264,42 @@ import (
     "context"
     "log"
 
-    "example"
+    "github.com/soyacen/golemporal/example/api"
     "github.com/soyacen/golemporal/starter"
     "go.temporal.io/sdk/client"
 )
 
 func main() {
-    c, err := client.Dial(client.Options{HostPort: client.DefaultHostPort})
+    ctx := context.Background()
+    c, err := client.Dial(client.Options{
+        HostPort: client.DefaultHostPort,
+    })
     if err != nil {
-        log.Fatalln("Unable to create client", err)
+        log.Fatal(err)
     }
     defer c.Close()
 
-    // Create a workflow client
-    gc := example.NewGreeterWorkflowClient(c, "my-task-queue")
+    taskQueue := "golemporal-example"
 
-    // Execute workflow with options
-    var result example.HelloResponse
-    err = gc.Hello(context.Background(), 
-        &example.HelloRequest{Name: "World"},
-        starter.ID("my-workflow-id"),
-        starter.GetResult(&result),
-    )
+    // Create a workflow client and execute workflow
+    hc := api.NewHelloWorkflowClient(c, taskQueue)
+    var helloResult api.HelloResponse
+    hlMd, err := hc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5}, starter.GetResult(&helloResult))
     if err != nil {
-        log.Fatalln("Workflow failed", err)
+        log.Fatal(err)
     }
 
-    log.Println("Result:", result.Message)
+    log.Printf("hello workflow completed, workflow_id: %s, workflow_type: %s, run_id: %s, message: %s, result: %d",
+        hlMd.GetWorkflowId(), hlMd.GetWorkflowType(), hlMd.GetRunId(), helloResult.Message, helloResult.Result)
+
+    gc := api.NewGoodbyeWorkflowClient(c, taskQueue)
+    var goodbyeResult api.GoodbyeResponse
+    bgMd, err := gc.Goodbye(ctx, &api.GoodbyeRequest{Name: "World", Count: 10}, starter.GetResult(&goodbyeResult))
+    if err != nil {
+        log.Fatal(err)
+    }
+    log.Printf("goodbye workflow completed, workflow_id: %s, workflow_type: %s, run_id: %s, message: %s, result: %d",
+        bgMd.GetWorkflowId(), bgMd.GetWorkflowType(), bgMd.GetRunId(), goodbyeResult.Message, goodbyeResult.Result)
 }
 ```
 
@@ -239,6 +315,29 @@ The `*_temporal.pb.go` file contains the following generated code:
 | `WorkflowServer` | Interface that workflow implementations must satisfy |
 | `Register*Activity` | Function to register activity with a Temporal worker |
 | `Register*Workflow` | Function to register workflow with a Temporal worker |
+
+### Workflow Execution Metadata
+
+Workflow client methods return `(*protobuf.Metadata, error)` which contains execution information:
+
+```go
+type Metadata struct {
+    WorkflowId   string // Unique workflow ID
+    RunId        string // Run ID for this execution
+    WorkflowType string // Workflow type name
+}
+```
+
+Example usage:
+
+```go
+md, err := client.Hello(ctx, &api.HelloRequest{Name: "World"})
+if err != nil {
+    log.Fatal(err)
+}
+log.Printf("Workflow started: ID=%s, RunID=%s, Type=%s", 
+    md.GetWorkflowId(), md.GetRunId(), md.GetWorkflowType())
+```
 
 ## Proto Service Naming
 
@@ -257,7 +356,7 @@ Use functional options from the `starter` package when starting workflows:
 ```go
 import "github.com/soyacen/golemporal/starter"
 
-result, err := gc.Hello(ctx, &example.HelloRequest{Name: "World"},
+md, err := hc.Hello(ctx, &api.HelloRequest{Name: "World"},
     starter.ID("my-workflow-id"),                           // Set workflow ID
     starter.TaskQueue("custom-queue"),                      // Override task queue
     starter.WorkflowExecutionTimeout(30 * time.Minute),     // Execution timeout
@@ -268,7 +367,7 @@ result, err := gc.Hello(ctx, &example.HelloRequest{Name: "World"},
     }),
     starter.CronSchedule("0 9 * * *"),                      // Cron schedule
     starter.Memo(map[string]any{"key": "value"}),           // Workflow memo
-    starter.SearchAttributes(map[string]any{"CustomKey": "value"}), // Search attributes
+    starter.TypedSearchAttributes(temporal.NewSearchAttributes(...)), // Search attributes
 )
 ```
 
@@ -277,8 +376,6 @@ result, err := gc.Hello(ctx, &example.HelloRequest{Name: "World"},
 | Option | Description |
 |--------|-------------|
 | `ID(string)` | Set a unique workflow ID |
-| `GetID(*string)` | Get the assigned workflow ID after execution |
-| `GetRunID(*string)` | Get the run ID after execution |
 | `TaskQueue(string)` | Override the default task queue |
 | `WorkflowExecutionTimeout(time.Duration)` | Total workflow execution timeout |
 | `WorkflowRunTimeout(time.Duration)` | Single workflow run timeout |
@@ -296,7 +393,7 @@ result, err := gc.Hello(ctx, &example.HelloRequest{Name: "World"},
 | `StaticDetails(string)` | Static details for the workflow |
 | `VersioningOverride(client.VersioningOverride)` | Versioning override for the workflow |
 | `Priority(temporal.Priority)` | Priority for the workflow |
-| `GetResult(any)` | Capture workflow result into pointer |
+| `GetResult(proto.Message)` | Capture workflow result into a proto message pointer |
 
 ## Example
 
@@ -329,6 +426,7 @@ See the `example/` directory for a complete working example.
 .
 ├── cmd/protoc-gen-golemporal/   # Protoc plugin implementation
 ├── starter/                     # Workflow starter options (functional options)
+├── protobuf/                    # Common protobuf definitions (Metadata)
 ├── example/                     # Complete working example
 │   ├── api/                     # Proto definitions and generated code
 │   ├── starter/                 # Workflow client example
