@@ -28,8 +28,7 @@ type addActivityClient struct{}
 
 func (c *addActivityClient) Add(ctx workflow.Context, in *AddRequest) (*AddResponse, error) {
 	var out AddResponse
-	err := workflow.ExecuteActivity(ctx, AddActivity_Add_ActitityType, in).Get(ctx, &out)
-	if err != nil {
+	if err := workflow.ExecuteActivity(ctx, AddActivity_Add_ActitityType, in).Get(ctx, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -55,8 +54,7 @@ type multiActivityClient struct{}
 
 func (c *multiActivityClient) Multi(ctx workflow.Context, in *MultiRequest) (*MultiResponse, error) {
 	var out MultiResponse
-	err := workflow.ExecuteActivity(ctx, MultiActivity_Multi_ActitityType, in).Get(ctx, &out)
-	if err != nil {
+	if err := workflow.ExecuteActivity(ctx, MultiActivity_Multi_ActitityType, in).Get(ctx, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
