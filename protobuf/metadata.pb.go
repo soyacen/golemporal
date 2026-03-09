@@ -23,9 +23,10 @@ const (
 
 type Metadata struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	WorkflowId    string                 `protobuf:"bytes,1,opt,name=workflow_id,json=workflowId,proto3" json:"workflow_id,omitempty"`
-	RunId         string                 `protobuf:"bytes,2,opt,name=run_id,json=runId,proto3" json:"run_id,omitempty"`
-	WorkflowType  string                 `protobuf:"bytes,3,opt,name=workflow_type,json=workflowType,proto3" json:"workflow_type,omitempty"`
+	TaskQueue     string                 `protobuf:"bytes,1,opt,name=task_queue,json=taskQueue,proto3" json:"task_queue,omitempty"`
+	WorkflowId    string                 `protobuf:"bytes,2,opt,name=workflow_id,json=workflowId,proto3" json:"workflow_id,omitempty"`
+	RunId         string                 `protobuf:"bytes,3,opt,name=run_id,json=runId,proto3" json:"run_id,omitempty"`
+	WorkflowType  string                 `protobuf:"bytes,4,opt,name=workflow_type,json=workflowType,proto3" json:"workflow_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -60,6 +61,13 @@ func (*Metadata) Descriptor() ([]byte, []int) {
 	return file_golemporal_protobuf_metadata_proto_rawDescGZIP(), []int{0}
 }
 
+func (x *Metadata) GetTaskQueue() string {
+	if x != nil {
+		return x.TaskQueue
+	}
+	return ""
+}
+
 func (x *Metadata) GetWorkflowId() string {
 	if x != nil {
 		return x.WorkflowId
@@ -85,12 +93,14 @@ var File_golemporal_protobuf_metadata_proto protoreflect.FileDescriptor
 
 const file_golemporal_protobuf_metadata_proto_rawDesc = "" +
 	"\n" +
-	"\"golemporal/protobuf/metadata.proto\x12\x13golemporal.protobuf\"g\n" +
-	"\bMetadata\x12\x1f\n" +
-	"\vworkflow_id\x18\x01 \x01(\tR\n" +
+	"\"golemporal/protobuf/metadata.proto\x12\x13golemporal.protobuf\"\x86\x01\n" +
+	"\bMetadata\x12\x1d\n" +
+	"\n" +
+	"task_queue\x18\x01 \x01(\tR\ttaskQueue\x12\x1f\n" +
+	"\vworkflow_id\x18\x02 \x01(\tR\n" +
 	"workflowId\x12\x15\n" +
-	"\x06run_id\x18\x02 \x01(\tR\x05runId\x12#\n" +
-	"\rworkflow_type\x18\x03 \x01(\tR\fworkflowTypeB1Z/github.com/soyacen/golemporal/protobuf;protobufb\x06proto3"
+	"\x06run_id\x18\x03 \x01(\tR\x05runId\x12#\n" +
+	"\rworkflow_type\x18\x04 \x01(\tR\fworkflowTypeB1Z/github.com/soyacen/golemporal/protobuf;protobufb\x06proto3"
 
 var (
 	file_golemporal_protobuf_metadata_proto_rawDescOnce sync.Once

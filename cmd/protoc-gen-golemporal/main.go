@@ -45,7 +45,7 @@ var (
 
 var (
 	protobufPackage = protogen.GoImportPath("github.com/soyacen/golemporal/protobuf")
-	metadataIdent     = protobufPackage.Ident("Metadata")
+	metadataIdent   = protobufPackage.Ident("Metadata")
 )
 
 var flags flag.FlagSet
@@ -210,7 +210,9 @@ func generateWorkflowClient(g *protogen.GeneratedFile, svc *protogen.Service) {
 		g.P("if err != nil {")
 		g.P("return nil, err")
 		g.P("}")
-		g.P("md := &", metadataIdent, "{}")
+		g.P("md := &", metadataIdent, "{")
+		g.P("TaskQueue: c.taskQueue,")
+		g.P("}")
 		g.P("md.WorkflowId = run.GetID()")
 		g.P("md.RunId = run.GetRunID()")
 		g.P("md.WorkflowType = ", workflowTypeFullName(method))

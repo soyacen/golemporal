@@ -2,7 +2,8 @@ syntax = "proto3";
 package golemporal.protobuf;
 option go_package = "github.com/soyacen/golemporal/protobuf;protobuf";
 message Metadata {
-  string workflow_id = 1;
-  string run_id = 2;
-  string workflow_type = 3;
+  string task_queue = 1;
+  string workflow_id = 2;
+  string run_id = 3;
+  string workflow_type = 4;
 }

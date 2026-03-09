@@ -87,7 +87,9 @@ func (c *helloWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts 
 	if err != nil {
 		return nil, err
 	}
-	md := &protobuf.Metadata{}
+	md := &protobuf.Metadata{
+		TaskQueue: c.taskQueue,
+	}
 	md.WorkflowId = run.GetID()
 	md.RunId = run.GetRunID()
 	md.WorkflowType = HelloWorkflow_Hello_WorkflowType
@@ -127,7 +129,9 @@ func (c *goodbyeWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest,
 	if err != nil {
 		return nil, err
 	}
-	md := &protobuf.Metadata{}
+	md := &protobuf.Metadata{
+		TaskQueue: c.taskQueue,
+	}
 	md.WorkflowId = run.GetID()
 	md.RunId = run.GetRunID()
 	md.WorkflowType = GoodbyeWorkflow_Goodbye_WorkflowType
