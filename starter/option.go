@@ -3,7 +3,6 @@ package starter
 import (
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	enums "go.temporal.io/api/enums/v1"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
@@ -11,14 +10,14 @@ import (
 
 type Options struct {
 	client.StartWorkflowOptions
-	Result proto.Message
+	WaitResult bool
 }
 
 type Option func(*Options)
 
-func GetResult(res proto.Message) Option {
+func WaitResult(wait bool) Option {
 	return func(o *Options) {
-		o.Result = res
+		o.WaitResult = wait
 	}
 }
 

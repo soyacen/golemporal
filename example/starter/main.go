@@ -22,8 +22,7 @@ func main() {
 	taskQueue := "golemporal-example"
 
 	hc := api.NewHelloWorkflowClient(c, taskQueue)
-	var helloResult api.HelloResponse
-	hlMd, err := hc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5}, starter.GetResult(&helloResult))
+	helloResult, hlMd, err := hc.Hello(ctx, &api.HelloRequest{Name: "World", Count: 5}, starter.WaitResult(true))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -31,8 +30,7 @@ func main() {
 	log.Printf("hello workflow completed, workflow_id: %s, workflow_type: %s, run_id: %s, message: %s, result: %d", hlMd.GetWorkflowId(), hlMd.GetWorkflowType(), hlMd.GetRunId(), helloResult.Message, helloResult.Result)
 
 	gc := api.NewGoodbyeWorkflowClient(c, taskQueue)
-	var goodbyeResult api.GoodbyeResponse
-	bgMd, err := gc.Goodbye(ctx, &api.GoodbyeRequest{Name: "World", Count: 10}, starter.GetResult(&goodbyeResult))
+	goodbyeResult, bgMd, err := gc.Goodbye(ctx, &api.GoodbyeRequest{Name: "World", Count: 10}, starter.WaitResult(true))
 	if err != nil {
 		log.Fatal(err)
 	}

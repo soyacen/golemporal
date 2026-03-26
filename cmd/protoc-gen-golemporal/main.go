@@ -182,7 +182,8 @@ func generateWorkflowClient(g *protogen.GeneratedFile, svc *protogen.Service) {
 	g.P("type ", clientName, " interface {")
 	for _, method := range svc.Methods {
 		inputType := method.Input.GoIdent
-		g.P(method.Desc.Name(), "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") (*", metadataIdent, ", error)")
+		outputType := method.Output.GoIdent
+		g.P(method.Desc.Name(), "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") (*", outputType, ", *", metadataIdent, ", error)")
 	}
 	g.P("}")
 	g.P()
@@ -203,26 +204,28 @@ func generateWorkflowClient(g *protogen.GeneratedFile, svc *protogen.Service) {
 	// Generate methods
 	for _, method := range svc.Methods {
 		inputType := method.Input.GoIdent
+		outputType := method.Output.GoIdent
 		methodName := string(method.Desc.Name())
-		g.P("func (c *", toLowerCase(clientName), ") ", methodName, "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") (*", metadataIdent, ", error) {")
+		g.P("func (c *", toLowerCase(clientName), ") ", methodName, "(ctx ", contextIdent, ", in *", inputType, ", opts ...", starterOptionIdent, ") (*", outputType, ", *", metadataIdent, ", error) {")
 		g.P("options := ", starterNewOptionsIdent, "(c.taskQueue, opts...)")
 		g.P("run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, ", workflowTypeFullName(method), ", in)")
 		g.P("if err != nil {")
-		g.P("return nil, err")
+		g.P("return nil, nil, err")
 		g.P("}")
 		g.P("md := &", metadataIdent, "{")
 		g.P("TaskQueue: c.taskQueue,")
 		g.P("WorkflowId: run.GetID(),")
 		g.P("RunId: run.GetRunID(),")
-		g.P("WorkflowType: ", workflowTypeFullName(method),",")
+		g.P("WorkflowType: ", workflowTypeFullName(method), ",")
 		g.P("}")
-		g.P("if options.Result == nil {")
-		g.P("return md, nil")
+		g.P("if !options.WaitResult {")
+		g.P("return nil, md, nil")
 		g.P("}")
-		g.P("if err := run.Get(ctx, options.Result); err != nil {")
-		g.P("return nil, err")
+		g.P("var result ", outputType)
+		g.P("if err := run.Get(ctx, &result); err != nil {")
+		g.P("return nil, md, err")
 		g.P("}")
-		g.P("return md, nil")
+		g.P("return &result, md, nil")
 		g.P("}")
 		g.P()
 	}

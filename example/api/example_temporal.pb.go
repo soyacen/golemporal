@@ -69,7 +69,7 @@ var (
 )
 
 type HelloWorkflowClient interface {
-	Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) (*protobuf.Metadata, error)
+	Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) (*HelloResponse, *protobuf.Metadata, error)
 }
 
 type helloWorkflowClient struct {
@@ -81,11 +81,11 @@ func NewHelloWorkflowClient(c client.Client, taskQueue string) HelloWorkflowClie
 	return &helloWorkflowClient{c: c, taskQueue: taskQueue}
 }
 
-func (c *helloWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) (*protobuf.Metadata, error) {
+func (c *helloWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts ...starter.Option) (*HelloResponse, *protobuf.Metadata, error) {
 	options := starter.NewOptions(c.taskQueue, opts...)
 	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, HelloWorkflow_Hello_WorkflowType, in)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	md := &protobuf.Metadata{
 		TaskQueue:    c.taskQueue,
@@ -93,13 +93,14 @@ func (c *helloWorkflowClient) Hello(ctx context.Context, in *HelloRequest, opts 
 		RunId:        run.GetRunID(),
 		WorkflowType: HelloWorkflow_Hello_WorkflowType,
 	}
-	if options.Result == nil {
-		return md, nil
+	if !options.WaitResult {
+		return nil, md, nil
 	}
-	if err := run.Get(ctx, options.Result); err != nil {
-		return nil, err
+	var result HelloResponse
+	if err := run.Get(ctx, &result); err != nil {
+		return nil, md, err
 	}
-	return md, nil
+	return &result, md, nil
 }
 
 type HelloWorkflowServer interface {
@@ -111,7 +112,7 @@ var (
 )
 
 type GoodbyeWorkflowClient interface {
-	Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) (*protobuf.Metadata, error)
+	Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) (*GoodbyeResponse, *protobuf.Metadata, error)
 }
 
 type goodbyeWorkflowClient struct {
@@ -123,11 +124,11 @@ func NewGoodbyeWorkflowClient(c client.Client, taskQueue string) GoodbyeWorkflow
 	return &goodbyeWorkflowClient{c: c, taskQueue: taskQueue}
 }
 
-func (c *goodbyeWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) (*protobuf.Metadata, error) {
+func (c *goodbyeWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest, opts ...starter.Option) (*GoodbyeResponse, *protobuf.Metadata, error) {
 	options := starter.NewOptions(c.taskQueue, opts...)
 	run, err := c.c.ExecuteWorkflow(ctx, options.StartWorkflowOptions, GoodbyeWorkflow_Goodbye_WorkflowType, in)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	md := &protobuf.Metadata{
 		TaskQueue:    c.taskQueue,
@@ -135,13 +136,14 @@ func (c *goodbyeWorkflowClient) Goodbye(ctx context.Context, in *GoodbyeRequest,
 		RunId:        run.GetRunID(),
 		WorkflowType: GoodbyeWorkflow_Goodbye_WorkflowType,
 	}
-	if options.Result == nil {
-		return md, nil
+	if !options.WaitResult {
+		return nil, md, nil
 	}
-	if err := run.Get(ctx, options.Result); err != nil {
-		return nil, err
+	var result GoodbyeResponse
+	if err := run.Get(ctx, &result); err != nil {
+		return nil, md, err
 	}
-	return md, nil
+	return &result, md, nil
 }
 
 type GoodbyeWorkflowServer interface {
